@@ -6,6 +6,7 @@ import sqlite3
 import urllib
 import urllib.parse
 import urllib.request
+import time
 
 def f_post_data(local_province_id, school_id, local_type_id, n_page, year):
     url = "https://gkcx.eol.cn/gkcx/api"
@@ -21,7 +22,16 @@ def f_post_data(local_province_id, school_id, local_type_id, n_page, year):
     response = urllib.request.urlopen(req)
     page = response.read()
     dpage = json.loads(page.decode('utf-8'))
-    item_data_len = len(dpage['data']['item'])
+    item_data_len = 0;
+#    if dpage['data']['item'] is None:
+#        return
+#    item_data_len = len(dpage['data']['item'])
+    if 'data' in dpage:
+        if dpage['data'] is None or isinstance(dpage['data'], str):
+            return;
+        else:
+            item_data_len = len(dpage['data']['item'])
+#            item_data_len = len(dpage['data']['item'])
 
     if item_data_len == 0:
         return
@@ -29,6 +39,8 @@ def f_post_data(local_province_id, school_id, local_type_id, n_page, year):
     f_store_data(items)
     f_post_data(local_province_id, school_id, local_type_id, n_page + 1, year)
 #    return page.decode('utf-8')
+    time.sleep(1);
+    return;
 
 def f_sql_data():
     conn = sqlite3.connect('gk.db')
@@ -46,12 +58,21 @@ def f_store_data(items):
     conn = sqlite3.connect('gk.db')
     cursor = conn.cursor()
     for item in items:
-        curson = conn.execute("select * from school where id = '" + item['id'] +"'")
+        curson = conn.execute("select * from detail where id = '" + item['id'] +"'")
         conn.commit()
         rows = curson.fetchall()
         if (len(rows) >= 1):
             break;
-        cursor.execute('insert into detail values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (item['id'], item['level2_name'], str(item['year']), str(item['local_province_id']), str(item['local_type_id']), str(item['min']), str(item['elective']), str(item['school_id']),item['level1_name'],str(item['special_id']),item['local_province_name'],item['local_batch_name'],item['spname'],str(item['local_batch_id']),item['level3_name'],item['name'],item['local_type_name'],str(item['f211']),str(item['school_type']),str(item['type']),str(item['is_recruitment']),str(item['dual_class']),str(item['level']),str(item['province_id']),str(item['f985']),item['dual_class_name']));
+#        print(item)
+        for key in item.keys():
+            if item[key] == '--':
+                item[key] = -1;
+        for kn in ['level2_name', 'elective', 'level1_name', 'level3_name', 'local_type_name']:
+            if kn in item:
+                continue;
+            else:
+                item[kn] = 'none';
+        cursor.execute('insert into detail values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)', (item['id'], item['level2_name'], str(item['year']), str(item['local_province_id']), str(item['local_type_id']), str(item['min']), str(item['elective']), str(item['school_id']),item['level1_name'],str(item['max']),str(item['special_id']),item['local_province_name'],item['local_batch_name'],item['spname'],str(item['local_batch_id']),item['level3_name'],item['name'],item['local_type_name'],str(item['f211']),str(item['school_type']),str(item['type']),str(item['is_recruitment']),str(item['dual_class']),str(item['level']),str(item['province_id']),str(item['f985']),item['dual_class_name']));
         conn.commit()
     conn.close()
 
