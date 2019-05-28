@@ -15,8 +15,9 @@ def f_post_data(local_province_id, school_id, local_type_id, n_page, year):
     }
     # post_data 需要被转码成字节流。
     # 需要使用 urllib.parse.urlencode() 将字典转化为字符串，再使用 bytes() 转为字节流。
-    user_agent = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Mobile Safari/537.36'
-    headersdata = { 'User-Agent' : user_agent}
+    # user_agent = 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.115 Mobile Safari/537.36'
+    user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.169 Safari/537.36'
+    headersdata = { 'User-Agent' : user_agent, 'Origin': 'https://gkcx.eol.cn', 'Referer':'https://gkcx.eol.cn/school/211/specialtyline'}
     data = bytes(urllib.parse.urlencode(post_data), encoding='utf8')
     req = request.Request(url, data=data, headers=headersdata)
     response = urllib.request.urlopen(req)
@@ -78,7 +79,12 @@ def f_store_data(items):
 
 if __name__ == '__main__':
     sList = f_sql_data();
+    dc = 0;
     for one in sList:
+        if dc == 0:
+            if one[2] == 212:
+                dc = 1;
+            continue;
         f_post_data(one[1], one[2], 1, 1, 2018);
         f_post_data(one[1], one[2], 2, 1, 2018);
         f_post_data(one[1], one[2], 1, 1, 2017);
